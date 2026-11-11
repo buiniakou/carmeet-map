@@ -4,197 +4,430 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Car Meet Spots</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-  :root { --bg:#111317; --panel:#1a1d23; --line:#2a2f38; --text:#e8eaed; --muted:#9aa0a6; --accent:#ff4d4d; }
-  * { box-sizing: border-box; }
-  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, -apple-system, sans-serif; }
-  #app { display:flex; height:100%; }
-  #side { width:300px; background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; }
-  #side header { padding:14px 16px; border-bottom:1px solid var(--line); }
-  #side h1 { margin:0 0 4px; font-size:18px; display:flex; align-items:center; gap:8px; }
-  #side h1 i { color:var(--accent); }
-  #side p { margin:0; color:var(--muted); font-size:12px; }
-  .search { position:relative; margin:10px 16px; }
-  .search i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:12px; }
-  #search { width:100%; padding:8px 10px 8px 30px; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:6px; font:inherit; }
-  #list { flex:1; overflow-y:auto; padding:0 8px; }
-  .item { display:flex; gap:10px; align-items:flex-start; padding:10px; border-radius:6px; cursor:pointer; border-bottom:1px solid var(--line); }
-  .item:hover { background:#232730; }
-  .item > i { color:var(--accent); margin-top:3px; }
-  .item b { display:block; }
-  .item span { color:var(--muted); font-size:12px; }
-  .empty { color:var(--muted); padding:16px 8px; }
-  #tools { padding:12px 16px; border-top:1px solid var(--line); display:flex; gap:8px; flex-wrap:wrap; }
-  button, .btn { display:inline-flex; align-items:center; gap:6px; background:#2a2f38; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:7px 10px; cursor:pointer; font:inherit; }
-  button:hover, .btn:hover { background:#353b46; }
-  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-  button.danger { color:#ff8a8a; }
-  #map { flex:1; background:#143d55; }
-  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background:var(--panel); color:var(--text); }
-  .leaflet-popup-content { margin:12px; min-width:220px; }
-  .leaflet-container a.leaflet-popup-close-button { color:var(--muted); }
-  form label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
-  form input, form textarea { width:100%; padding:6px 8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:5px; font:inherit; }
-  form textarea { min-height:60px; resize:vertical; }
-  .row { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-  .pin { position:relative; width:30px; height:40px; }
-  .pin .fa-location-pin { position:absolute; inset:0; font-size:40px; color:var(--accent); filter:drop-shadow(0 2px 3px #000b); }
-  .pin .fa-car-side { position:absolute; left:50%; top:9px; transform:translateX(-50%); font-size:13px; color:#fff; }
-  .pop h3 { margin:0 0 6px; font-size:15px; }
-  .pop .notes { white-space:pre-wrap; color:#cfd3d8; }
-  @media (max-width: 700px) {
-    #app { flex-direction:column-reverse; }
-    #side { width:100%; height:40%; border-right:0; border-top:1px solid var(--line); }
+  :root {
+    --page:#e7e8ea; --shell:#f4f4f5; --card:#ffffff; --soft:#f3f3f4; --line:#e4e4e7;
+    --ink:#1f1f22; --muted:#7a7a80; --dark:#2c2c2e; --orange:#f7813a;
+    --green:#3dbd5d;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; background:var(--page); color:var(--ink);
+    font:15px/1.4 'Inter Tight', system-ui, -apple-system, sans-serif; letter-spacing:-0.01em; }
+  button, input { font:inherit; color:inherit; letter-spacing:inherit; }
+
+  .shell { max-width:1440px; margin:24px auto; padding:24px; background:var(--shell); border-radius:40px;
+    display:flex; flex-direction:column; gap:24px; min-height:calc(100vh - 48px); }
+
+  /* Top bar */
+  .top { display:flex; align-items:center; gap:16px; }
+  .logo { display:flex; align-items:center; gap:10px; background:var(--card); border-radius:999px; padding:12px 22px;
+    font-weight:600; font-size:20px; }
+  .logo i { color:var(--orange); }
+  .nav { margin:0 auto; display:flex; gap:4px; background:var(--card); border-radius:999px; padding:6px; }
+  .nav button { padding:10px 22px; border-radius:999px; border:0; background:transparent; color:var(--ink); cursor:pointer; }
+  .nav button:hover { background:var(--soft); }
+  .nav button.on { background:var(--dark); color:#fff; }
+  .actions { display:flex; gap:10px; }
+  .circle { width:52px; height:52px; border-radius:50%; background:var(--card); border:0; display:grid; place-items:center;
+    cursor:pointer; font-size:17px; color:var(--ink); flex:none; }
+  .circle:hover { background:#ececee; }
+  .circle.sm { width:44px; height:44px; font-size:15px; }
+  .circle.dark { background:var(--dark); color:#fff; }
+
+  /* Search + stats */
+  .hero { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:40px; align-items:end; }
+  .search { display:flex; align-items:center; gap:12px; border-bottom:1px solid #d9d9dd; padding-bottom:14px; min-width:0; }
+  .search input { flex:1; min-width:0; border:0; background:transparent; outline:none; font-size:52px; font-weight:400;
+    letter-spacing:-0.04em; }
+  .search input::placeholder { color:var(--ink); }
+  .stats { display:flex; gap:56px; }
+  .stat small { display:block; color:#444; font-size:15px; margin-bottom:6px; }
+  .stat b { font-size:52px; font-weight:400; letter-spacing:-0.04em; line-height:1; }
+  .chip { display:inline-block; vertical-align:middle; margin-left:8px; padding:3px 8px; border-radius:999px;
+    font-size:13px; color:#fff; background:var(--green); font-weight:500; letter-spacing:0; }
+
+  /* Body */
+  .body { flex:1; display:grid; grid-template-columns:360px minmax(0, 1fr); gap:24px; min-height:560px; }
+  .col { display:flex; flex-direction:column; gap:24px; min-height:0; }
+  .card { background:var(--card); border-radius:28px; padding:22px; min-width:0; }
+  .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .card h2 { margin:0; font-size:26px; font-weight:400; letter-spacing:-0.03em; line-height:1.15; }
+
+  .hint { background:var(--orange); color:#fff; display:flex; flex-direction:column; gap:22px; }
+  .hint .circle { background:rgba(255,255,255,.22); color:#fff; }
+  .hint .pill { align-self:flex-start; display:flex; align-items:center; gap:8px; background:#fff; color:var(--ink);
+    border-radius:999px; padding:9px 16px; font-weight:500; }
+  .hint .count { display:flex; align-items:flex-end; gap:10px; }
+  .hint .count b { font-size:72px; font-weight:300; line-height:.9; letter-spacing:-0.05em; }
+  .hint .count span { font-size:14px; line-height:1.2; padding-bottom:6px; opacity:.9; }
+
+  .list-card { flex:1; display:flex; flex-direction:column; min-height:260px; }
+  #list { flex:1; overflow-y:auto; margin:16px -6px 0; padding:0 6px; display:flex; flex-direction:column; gap:10px; }
+  .item { display:flex; align-items:center; gap:12px; background:var(--soft); border-radius:20px; padding:12px 14px;
+    cursor:pointer; border:1px solid transparent; }
+  .item:hover { border-color:var(--line); background:#efeff1; }
+  .item .dot { width:36px; height:36px; border-radius:50%; background:var(--c, var(--orange)); color:#fff; display:grid; place-items:center;
+    font-size:13px; flex:none; }
+  .item div { min-width:0; flex:1; }
+  .item b { display:block; font-weight:500; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .time { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; }
+  .empty { color:var(--muted); padding:18px 4px; }
+
+  .map-card { position:relative; padding:0; overflow:hidden; }
+  .map-card .card-head { position:absolute; z-index:5; top:18px; left:18px; right:18px; pointer-events:none; }
+  .map-card .tag { pointer-events:auto; background:rgba(255,255,255,.94); border-radius:999px; padding:10px 18px;
+    font-size:15px; display:flex; align-items:center; gap:8px; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+  .map-card .tag i { color:var(--orange); }
+  .map-card .tag.moving { background:var(--dark); color:#fff; }
+  #map { position:absolute; inset:0; background:#1d3a52; }
+  .zoom { position:absolute; z-index:5; right:18px; bottom:18px; display:flex; flex-direction:column; gap:8px; }
+  .zoom .circle { width:44px; height:44px; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+
+  /* Popups: dark card like the "Upcoming meeting" panel */
+  .maplibregl-popup-content { background:var(--dark); color:#fff; border-radius:26px; padding:20px; width:270px;
+    box-shadow:0 12px 32px rgba(0,0,0,.3); font:inherit; }
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color:var(--dark); }
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color:var(--dark); }
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color:var(--dark); }
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:var(--dark); }
+  .pop .x { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; border:0; cursor:pointer;
+    background:rgba(255,255,255,.12); color:#fff; display:grid; place-items:center; }
+  .pop .x:hover { background:rgba(255,255,255,.2); }
+  .pop h3 { margin:0 40px 10px 0; font-size:24px; font-weight:400; letter-spacing:-0.03em; line-height:1.15; word-break:break-word; }
+  .pop .badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.12); border-radius:999px;
+    padding:4px 10px; font-size:13px; }
+  .row { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .btn { display:inline-flex; align-items:center; gap:7px; border:0; border-radius:999px; padding:9px 14px; cursor:pointer;
+    background:rgba(255,255,255,.12); color:#fff; font-size:14px; }
+  .btn:hover { background:rgba(255,255,255,.2); }
+  .btn.orange { background:var(--orange); }
+  .btn.orange:hover { background:#ff9150; }
+  .btn.danger { color:#ff9aa1; }
+  .pop input { width:100%; padding:10px 14px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:14px; color:#fff; outline:none; }
+  .pop input:focus { border-color:var(--orange); }
+
+  .pin { position:relative; width:34px; height:44px; cursor:pointer; }
+  .pin .fa-location-pin { position:absolute; inset:0; font-size:44px; color:var(--c, var(--orange)); filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+  .pin .glyph { position:absolute; left:50%; top:10px; transform:translateX(-50%); font-size:14px; color:#fff; }
+
+  .types { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .types label { cursor:pointer; }
+  .types input { position:absolute; opacity:0; pointer-events:none; }
+  .types span { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; font-size:13px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); }
+  .types span i { color:var(--c); }
+  .types input:checked + span { background:var(--c); border-color:var(--c); }
+  .types input:checked + span i { color:#fff; }
+  .types input:focus-visible + span { outline:2px solid #fff; outline-offset:2px; }
+  .pop .badge.type { background:var(--c); }
+
+  @media (max-width: 1100px) {
+    .nav { display:none; }
+    .actions { margin-left:auto; }
+    .hero { grid-template-columns:1fr; gap:20px; }
+    .stats { gap:32px; }
+  }
+  @media (max-width: 800px) {
+    .shell { margin:0; padding:16px; border-radius:0; gap:16px; min-height:100vh; }
+    .logo { font-size:17px; padding:10px 16px; }
+    .circle { width:44px; height:44px; font-size:15px; }
+    .search input { font-size:34px; }
+    .stat b { font-size:38px; }
+    .body { grid-template-columns:1fr; gap:16px; }
+    .map-card { height:62vh; order:-1; }
+    .col { gap:16px; }
+    .hint .count b { font-size:56px; }
+    .list-card { min-height:0; }
   }
 </style>
 </head>
 <body>
-<div id="app">
-  <aside id="side">
-    <header>
-      <h1><i class="fa-solid fa-car-side"></i> Car Meet Spots</h1>
-      <p>Click anywhere on the map to drop a spot.</p>
-    </header>
-    <div class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="search" placeholder="Search spots"></div>
-    <div id="list"></div>
-    <div id="tools">
-      <button id="export"><i class="fa-solid fa-download"></i> Export</button>
-      <label class="btn"><i class="fa-solid fa-upload"></i> Import<input id="import" type="file" accept=".json" hidden></label>
+<div class="shell">
+  <div class="top">
+    <div class="logo"><i class="fa-solid fa-car-side"></i> Car Meets</div>
+    <div class="nav" id="nav">
+      <button data-area="all" class="on">Whole Map</button><button data-area="ls">Los Santos</button><button data-area="bc">Blaine County</button>
     </div>
-  </aside>
-  <div id="map"></div>
+    <div class="actions">
+      <button class="circle" id="export" title="Export spots"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+      <label class="circle" title="Import spots"><i class="fa-solid fa-file-import"></i><input id="import" type="file" accept=".json" hidden></label>
+      <button class="circle dark" id="fit" title="Show whole map"><i class="fa-solid fa-expand"></i></button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <label class="search">
+      <input id="search" placeholder="Search spots...">
+      <span class="circle"><i class="fa-solid fa-magnifying-glass"></i></span>
+    </label>
+    <div class="stats">
+      <div class="stat"><small>Total Spots</small><b id="stat-total">0</b></div>
+      <div class="stat"><small>Added This Week</small><b id="stat-week">0</b><span class="chip" id="stat-week-chip" hidden>new</span></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="col">
+      <div class="card hint">
+        <div class="card-head">
+          <h2>Drop a<br>New Spot</h2>
+          <button class="circle sm" id="hint-fit" title="Show whole map"><i class="fa-solid fa-arrow-right-long" style="transform:rotate(-45deg)"></i></button>
+        </div>
+        <div class="pill"><i class="fa-solid fa-circle-plus"></i> Click anywhere on the map</div>
+        <div class="count"><b id="count">0</b><span>spots<br>saved</span></div>
+      </div>
+      <div class="card list-card">
+        <div class="card-head"><h2>Saved Spots</h2></div>
+        <div id="list"></div>
+      </div>
+    </div>
+    <div class="card map-card">
+      <div id="map"></div>
+      <div class="card-head"><div class="tag" id="tag"><i class="fa-solid fa-location-dot"></i> GTA V Satellite</div></div>
+      <div class="zoom">
+        <button class="circle" id="zin" title="Zoom in"><i class="fa-solid fa-plus"></i></button>
+        <button class="circle" id="zout" title="Zoom out"><i class="fa-solid fa-minus"></i></button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
-// The map is 8192x8192 px, cut into 256px tiles at zooms 0-5 (tiles/{z}/{y}/{x}.jpg).
-// Coordinates: 1 unit = 32 px at full size, so the map spans lng 0..256 and lat 0..-256.
-const KEY = 'carmeet-spots-v2';
-const OLD_KEY = 'carmeet-spots-v1';
-const EXTENT = 256;
+// The 8192x8192 px map is cut into 256px tiles, zooms 0-5 (tiles/{z}/{y}/{x}.jpg).
+// MapLibre needs a "world" bigger than the image (otherwise it won't zoom out far enough
+// to show the whole map), so the image sits in the middle quarter of a world 4x its size:
+// world tile (z, x, y) = image tile (z - 2, x - 3*2^(z-3), y - 3*2^(z-3)).
+// Spots are stored in image pixels (x, y from the top-left).
+const SIZE = 8192;
+const WORLD = SIZE * 4, OFFSET = SIZE * 1.5;
+const KEY = 'carmeet-spots-v3';
 
-const map = L.map('map', {
-  crs: L.CRS.Simple, minZoom: 0, maxZoom: 7, zoomSnap: 0.5, zoomDelta: 0.5,
-  wheelPxPerZoomLevel: 90, attributionControl: false,
+const toLngLat = (x, y) => {
+  const wx = (x + OFFSET) / WORLD, wy = (y + OFFSET) / WORLD;
+  return [wx * 360 - 180, Math.atan(Math.sinh(Math.PI * (1 - 2 * wy))) * 180 / Math.PI];
+};
+const toPx = ({ lng, lat }) => {
+  const r = lat * Math.PI / 180;
+  const wx = (lng + 180) / 360, wy = (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2;
+  return { x: wx * WORLD - OFFSET, y: wy * WORLD - OFFSET };
+};
+const pxBounds = (x1, y1, x2, y2) => [toLngLat(x1, y2), toLngLat(x2, y1)];
+
+const BASE = location.href.split(/[?#]/)[0].replace(/[^/]*$/, '');
+const map = new maplibregl.Map({
+  container: 'map',
+  transformRequest: url => {
+    const m = url.match(/\/gta\/(\d+)\/(\d+)\/(\d+)$/);
+    if (!m) return { url };
+    const [z, x, y] = m.slice(1).map(Number), off = 3 * 2 ** (z - 3);
+    return { url: `${BASE}tiles/${z - 2}/${y - off}/${x - off}.jpg` };
+  },
+  style: {
+    version: 8,
+    sources: { gta: {
+      type: 'raster', tiles: [BASE + 'gta/{z}/{x}/{y}'],
+      // 128 makes MapLibre fetch one level deeper than the screen zoom: crisp on Retina screens.
+      tileSize: 128, minzoom: 3, maxzoom: 7,
+      bounds: [...toLngLat(0, SIZE), ...toLngLat(SIZE, 0)],
+    } },
+    layers: [
+      { id: 'bg', type: 'background', paint: { 'background-color': '#1d3a52' } },
+      { id: 'gta', type: 'raster', source: 'gta', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } },
+    ],
+  },
+  bounds: pxBounds(0, 0, SIZE, SIZE),
+  fitBoundsOptions: { padding: 20 },
+  renderWorldCopies: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
+  attributionControl: false, maxZoom: 6.5, minZoom: 1,
 });
-const bounds = L.latLngBounds([-EXTENT, 0], [0, EXTENT]);
-L.tileLayer('tiles/{z}/{y}/{x}.jpg', {
-  tileSize: 256, minNativeZoom: 0, maxNativeZoom: 5, noWrap: true, bounds,
-  keepBuffer: 4, updateWhenZooming: false,
-}).addTo(map);
-map.fitBounds(bounds);
-map.setMaxBounds(bounds.pad(0.2));
+map.touchZoomRotate.disableRotation();
+map.keyboard.disableRotation();
 
-let spots = load();
-const markers = {};
+const AREAS = {
+  all: pxBounds(0, 0, SIZE, SIZE),
+  ls: pxBounds(3040, 5600, 5280, 7840),
+  bc: pxBounds(2240, 800, 6400, 5600),
+};
+const nav = document.getElementById('nav');
+function goArea(key) {
+  map.fitBounds(AREAS[key], { padding: 20, duration: 700 });
+  nav.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.area === key));
+}
+nav.querySelectorAll('button').forEach(b => b.onclick = () => goArea(b.dataset.area));
+['fit', 'hint-fit'].forEach(id => document.getElementById(id).onclick = () => goArea('all'));
+document.getElementById('zin').onclick = () => map.zoomIn({ duration: 300 });
+document.getElementById('zout').onclick = () => map.zoomOut({ duration: 300 });
+new ResizeObserver(() => map.resize()).observe(document.getElementById('map'));
 
-// Spots from the first version used 0..8192 image coordinates (y up); convert them once.
-function fromV1(s) { return { id: s.id, name: s.name, notes: s.notes || '', lat: (s.lat - 8192) / 32, lng: s.lng / 32 }; }
+// ---- Spot types ----
+const TYPES = {
+  meet:   { label: 'Car meet',     color: '#f7813a', icon: 'fa-car-side' },
+  cruise: { label: 'Cruise route', color: '#3b82f6', icon: 'fa-route' },
+  photo:  { label: 'Photo spot',   color: '#a855f7', icon: 'fa-camera' },
+};
+const typeOf = s => TYPES[s.type] || TYPES.meet;
+
+// ---- Storage (older versions used other coordinates; convert them once) ----
+const clean = s => ({ id: String(s.id), name: String(s.name || 'Untitled'), type: TYPES[s.type] ? s.type : 'meet',
+  x: s.x, y: s.y, createdAt: s.createdAt });
+function migrate(s) {
+  if (typeof s.x === 'number') return clean(s);
+  if (typeof s.lat !== 'number') return null;
+  if (s.lat > 0 || s.lng > 256) return clean({ ...s, x: s.lng, y: SIZE - s.lat });   // v1: 0..8192, y up
+  return clean({ ...s, x: s.lng * 32, y: -s.lat * 32 });                            // v2: 0..256, lat down
+}
 function load() {
   try {
-    const v2 = JSON.parse(localStorage.getItem(KEY));
-    if (Array.isArray(v2)) return v2;
-    const v1 = JSON.parse(localStorage.getItem(OLD_KEY));
-    if (Array.isArray(v1)) { const s = v1.map(fromV1); localStorage.setItem(KEY, JSON.stringify(s)); return s; }
+    for (const k of [KEY, 'carmeet-spots-v2', 'carmeet-spots-v1']) {
+      const d = JSON.parse(localStorage.getItem(k));
+      if (Array.isArray(d)) { const s = d.map(migrate).filter(Boolean); if (k !== KEY) localStorage.setItem(KEY, JSON.stringify(s)); return s; }
+    }
   } catch {}
   return [];
 }
+let spots = load();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(spots)); } catch {} }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const pinIcon = L.divIcon({
-  className: '', iconSize: [30, 40], iconAnchor: [15, 38], popupAnchor: [0, -36],
-  html: '<div class="pin"><i class="fa-solid fa-location-pin"></i><i class="fa-solid fa-car-side"></i></div>',
-});
-
-function formHtml(s = {}) {
-  return `<form>
-    <label>Name</label><input name="name" required value="${esc(s.name)}" placeholder="e.g. LS Car Meet">
-    <label>Notes</label><textarea name="notes" placeholder="Best time, vibe, who goes">${esc(s.notes)}</textarea>
-    <div class="row"><button class="primary" type="submit"><i class="fa-solid fa-check"></i> Save</button><button type="button" data-cancel>Cancel</button></div>
-  </form>`;
-}
-function viewHtml(s) {
-  return `<div class="pop">
-    <h3>${esc(s.name)}</h3>
-    ${s.notes ? `<div class="notes">${esc(s.notes)}</div>` : ''}
-    <div class="row">
-      <button data-edit><i class="fa-solid fa-pen"></i> Edit</button>
-      <button data-move><i class="fa-solid fa-up-down-left-right"></i> Move</button>
-      <button class="danger" data-del><i class="fa-solid fa-trash"></i> Delete</button>
-    </div>
-  </div>`;
+function ago(t) {
+  if (!t) return 'Saved';
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.round(h / 24);
+  return d < 30 ? d + 'd ago' : new Date(t).toLocaleDateString();
 }
 
-function wireForm(popup, existing, latlng) {
-  const el = popup.getElement();
-  const form = el.querySelector('form');
-  form.name.focus();
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const data = { name: form.name.value.trim() || 'Untitled', notes: form.notes.value.trim() };
-    if (existing) { Object.assign(existing, data); save(); render(); openSpot(existing); return; }
-    const s = { id: Date.now().toString(36), lat: latlng.lat, lng: latlng.lng, ...data };
-    spots.push(s); map.closePopup(); save(); render(); openSpot(s);
-  });
-  el.querySelector('[data-cancel]').addEventListener('click', () => existing ? openSpot(existing) : map.closePopup());
+// ---- One popup, filled with real DOM so clicks inside never reach the map ----
+const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 38, maxWidth: 'none' });
+function showPopup(lngLat, html, wire, offset = 38) {
+  const el = document.createElement('div');
+  el.className = 'pop';
+  el.innerHTML = `<button class="x" title="Close"><i class="fa-solid fa-xmark"></i></button>${html}`;
+  el.querySelector('.x').onclick = () => popup.remove();
+  wire(el);
+  popup.setOffset(offset).setLngLat(lngLat).setDOMContent(el).addTo(map);
 }
 
-let moving = null;
-map.on('click', e => {
-  if (moving) {
-    Object.assign(moving, { lat: e.latlng.lat, lng: e.latlng.lng });
-    const s = moving; moving = null; map.getContainer().style.cursor = '';
-    save(); render(); openSpot(s);
-    return;
-  }
-  const popup = L.popup().setLatLng(e.latlng).setContent(formHtml()).openOn(map);
-  wireForm(popup, null, e.latlng);
-});
+function openForm(lngLat, existing) {
+  showPopup(lngLat, `<form>
+      <h3>${existing ? 'Edit Spot' : 'New Spot'}</h3>
+      <input name="name" required maxlength="80" value="${esc(existing?.name)}" placeholder="e.g. LS Car Meet" autocomplete="off">
+      <div class="types">${Object.entries(TYPES).map(([k, t]) => `<label style="--c:${t.color}">
+        <input type="radio" name="type" value="${k}" ${(existing?.type || 'meet') === k ? 'checked' : ''}>
+        <span><i class="fa-solid ${t.icon}"></i> ${t.label}</span></label>`).join('')}</div>
+      <div class="row"><button class="btn orange" type="submit"><i class="fa-solid fa-check"></i> Save</button><button class="btn" type="button" data-cancel>Cancel</button></div>
+    </form>`, el => {
+    const form = el.querySelector('form');
+    setTimeout(() => form.name.focus(), 0);
+    form.onsubmit = e => {
+      e.preventDefault();
+      const name = form.name.value.trim() || 'Untitled';
+      const type = form.type.value || 'meet';
+      if (existing) { Object.assign(existing, { name, type }); save(); render(); openSpot(existing); return; }
+      const { x, y } = toPx(lngLat);
+      const s = { id: Date.now().toString(36), name, type, x, y, createdAt: Date.now() };
+      spots.unshift(s); save(); render(); openSpot(s);
+    };
+    el.querySelector('[data-cancel]').onclick = () => existing ? openSpot(existing) : popup.remove();
+  }, existing ? 38 : 8);
+}
 
 function openSpot(s) {
-  const m = markers[s.id];
-  m.bindPopup(viewHtml(s)).openPopup();
-  const el = m.getPopup().getElement();
-  el.querySelector('[data-edit]').onclick = () => { m.setPopupContent(formHtml(s)); wireForm(m.getPopup(), s); };
-  el.querySelector('[data-move]').onclick = () => { moving = s; m.closePopup(); map.getContainer().style.cursor = 'crosshair'; };
-  const del = el.querySelector('[data-del]');
-  del.onclick = () => {
-    if (del.dataset.sure) { spots = spots.filter(x => x !== s); save(); render(); }
-    else { del.dataset.sure = 1; del.innerHTML = '<i class="fa-solid fa-trash"></i> Really delete?'; }
-  };
+  showPopup(toLngLat(s.x, s.y), `
+    <h3>${esc(s.name)}</h3>
+    <span class="badge type" style="--c:${typeOf(s).color}"><i class="fa-solid ${typeOf(s).icon}"></i> ${typeOf(s).label}</span>
+    <span class="badge"><i class="fa-regular fa-clock"></i> ${ago(s.createdAt)}</span>
+    <div class="row">
+      <button class="btn" data-edit><i class="fa-solid fa-pen"></i> Edit</button>
+      <button class="btn" data-move><i class="fa-solid fa-up-down-left-right"></i> Move</button>
+      <button class="btn danger" data-del><i class="fa-solid fa-trash"></i> Delete</button>
+    </div>`, el => {
+    el.querySelector('[data-edit]').onclick = () => openForm(toLngLat(s.x, s.y), s);
+    el.querySelector('[data-move]').onclick = () => { popup.remove(); setMoving(s); };
+    const del = el.querySelector('[data-del]');
+    del.onclick = () => {
+      if (del.dataset.sure) { spots = spots.filter(x => x !== s); save(); render(); popup.remove(); }
+      else { del.dataset.sure = 1; del.innerHTML = '<i class="fa-solid fa-trash"></i> Really delete?'; }
+    };
+  });
 }
 
-function render() {
-  Object.values(markers).forEach(m => m.remove());
-  for (const k in markers) delete markers[k];
-  for (const s of spots) {
-    const m = L.marker([s.lat, s.lng], { icon: pinIcon, title: s.name }).addTo(map);
-    m.on('click', () => openSpot(s));
-    markers[s.id] = m;
+// ---- Map clicks: add a spot, or drop a spot being moved ----
+const tag = document.getElementById('tag');
+const TAG_DEFAULT = tag.innerHTML;
+let moving = null;
+function setMoving(s) {
+  moving = s;
+  map.getCanvas().style.cursor = s ? 'crosshair' : '';
+  tag.classList.toggle('moving', !!s);
+  tag.innerHTML = s ? `<i class="fa-solid fa-up-down-left-right"></i> Click the new place for ${esc(s.name)}` : TAG_DEFAULT;
+}
+map.on('click', e => {
+  const t = e.originalEvent.target;
+  if (!t.isConnected || t.closest('.maplibregl-popup, .maplibregl-marker')) return;
+  const { x, y } = toPx(e.lngLat);
+  if (x < 0 || y < 0 || x > SIZE || y > SIZE) { popup.remove(); return; }
+  if (moving) {
+    const s = moving; s.x = x; s.y = y;
+    setMoving(null); save(); render(); openSpot(s);
+    return;
   }
+  openForm(e.lngLat, null);
+});
+
+// ---- Markers + list ----
+const markers = new Map();
+function render() {
+  markers.forEach(m => m.remove());
+  markers.clear();
+  for (const s of spots) {
+    const el = document.createElement('div');
+    el.className = 'pin';
+    el.title = s.name;
+    el.style.setProperty('--c', typeOf(s).color);
+    el.innerHTML = `<i class="fa-solid fa-location-pin"></i><i class="fa-solid ${typeOf(s).icon} glyph"></i>`;
+    el.addEventListener('click', e => { e.stopPropagation(); openSpot(s); });
+    markers.set(s.id, new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat(toLngLat(s.x, s.y)).addTo(map));
+  }
+  const week = spots.filter(s => s.createdAt && Date.now() - s.createdAt < 7 * 864e5).length;
+  document.getElementById('stat-total').textContent = spots.length;
+  document.getElementById('count').textContent = spots.length;
+  document.getElementById('stat-week').textContent = week;
+  document.getElementById('stat-week-chip').hidden = !week;
   renderList();
 }
 
 function renderList() {
-  const q = document.getElementById('search').value.toLowerCase();
+  const q = document.getElementById('search').value.trim().toLowerCase();
   const list = document.getElementById('list');
-  const shown = spots.filter(s => (s.name + ' ' + s.notes).toLowerCase().includes(q));
-  list.innerHTML = shown.length ? shown.map(s => `<div class="item" data-id="${s.id}">
-      <i class="fa-solid fa-location-dot"></i>
-      <div><b>${esc(s.name)}</b>${s.notes ? `<span>${esc(s.notes.slice(0, 60))}</span>` : ''}</div>
+  const shown = spots.filter(s => s.name.toLowerCase().includes(q));
+  list.innerHTML = shown.length ? shown.map(s => `<div class="item" data-id="${esc(s.id)}">
+      <span class="dot" style="--c:${typeOf(s).color}"><i class="fa-solid ${typeOf(s).icon}"></i></span>
+      <div><b>${esc(s.name)}</b><span class="time">${typeOf(s).label} · ${ago(s.createdAt)}</span></div>
+      <i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i>
     </div>`).join('')
-    : `<div class="empty">${spots.length ? 'No matches.' : 'No spots yet. Click the map to add one.'}</div>`;
+    : `<div class="empty">${spots.length ? 'No spots match your search.' : 'No spots yet. Click the map to add one.'}</div>`;
   list.querySelectorAll('.item').forEach(el => el.onclick = () => {
     const s = spots.find(x => x.id === el.dataset.id);
-    map.flyTo([s.lat, s.lng], 4, { duration: 0.6 });
+    if (window.innerWidth <= 800) document.querySelector('.map-card').scrollIntoView({ behavior: 'smooth' });
+    popup.remove();
+    map.flyTo({ center: toLngLat(s.x, s.y), zoom: Math.max(map.getZoom(), 4), duration: 800 });
     map.once('moveend', () => openSpot(s));
   });
 }
 document.getElementById('search').addEventListener('input', renderList);
 
+// ---- Export / import ----
 document.getElementById('export').onclick = () => {
   const blob = new Blob([JSON.stringify(spots, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -204,12 +437,10 @@ document.getElementById('export').onclick = () => {
 document.getElementById('import').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
-    let data = JSON.parse(await f.text());
+    const data = JSON.parse(await f.text());
     if (Array.isArray(data)) {
-      // Old exports have coordinates in 0..8192.
-      data = data.filter(s => s && typeof s.lat === 'number').map(s => s.lat > 0 || s.lng > EXTENT ? fromV1(s) : s);
       const ids = new Set(spots.map(s => s.id));
-      spots = spots.concat(data.filter(s => !ids.has(s.id)));
+      spots = spots.concat(data.map(migrate).filter(s => s && !ids.has(s.id)));
       save(); render();
     }
   } catch {}
@@ -219,12 +450,11 @@ document.getElementById('import').onchange = async e => {
 // First visit on a new device: load spots.json from the repo if there is one.
 if (!spots.length) {
   fetch('spots.json').then(r => r.ok ? r.json() : []).then(d => {
-    if (Array.isArray(d) && d.length && !spots.length) {
-      spots = d.map(s => s.lat > 0 || s.lng > EXTENT ? fromV1(s) : s); save(); render();
-    }
+    if (Array.isArray(d) && d.length && !spots.length) { spots = d.map(migrate).filter(Boolean); save(); render(); }
   }).catch(() => {});
 }
 render();
+setInterval(renderList, 60000);
 </script>
 </body>
 </html>
