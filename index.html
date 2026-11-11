@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
   :root {
-    --page:#f4f4f5; --card:#ffffff; --soft:#f3f3f4; --line:#e4e4e7;
-    --ink:#1f1f22; --muted:#7a7a80; --dark:#2c2c2e; --orange:#f7813a; --green:#3dbd5d;
+    --page:#f2f3ec; --card:#ffffff; --soft:#f1f2ea; --line:#e2e4d6;
+    --ink:#1f1f22; --muted:#7a7a80; --dark:#2a2e22; --accent:#6b7d2a; --accent-hi:#7f9434; --green:#8aa83a;
     --shadow:0 8px 28px rgba(20,20,30,.16);
   }
   * { box-sizing:border-box; }
@@ -27,7 +27,7 @@
     padding:20px; min-height:0; }
   .logo { align-self:flex-start; display:flex; align-items:center; gap:10px; background:var(--card); border-radius:999px;
     padding:12px 22px; font-weight:600; font-size:20px; }
-  .logo i { color:var(--orange); }
+  .logo i { color:var(--accent); }
 
   .search { display:flex; align-items:center; gap:12px; border-bottom:1px solid #d9d9dd; padding-bottom:12px; }
   .search input { flex:1; min-width:0; border:0; background:transparent; outline:none; font-size:36px; font-weight:400;
@@ -51,7 +51,7 @@
   .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .card h2 { margin:0; font-size:24px; font-weight:400; letter-spacing:-0.03em; line-height:1.15; }
 
-  .hint { background:var(--orange); color:#fff; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .hint { background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .hint .circle { background:rgba(255,255,255,.22); color:#fff; }
   .hint .count { display:flex; align-items:flex-end; gap:10px; }
   .hint .count b { font-size:56px; font-weight:300; line-height:.9; letter-spacing:-0.05em; }
@@ -63,7 +63,7 @@
   .item { display:flex; align-items:center; gap:12px; background:var(--soft); border-radius:20px; padding:10px 12px;
     cursor:pointer; border:1px solid transparent; }
   .item:hover { border-color:var(--line); background:#efeff1; }
-  .item .dot { width:36px; height:36px; border-radius:50%; background:var(--c, var(--orange)); color:#fff; display:grid;
+  .item .dot { width:36px; height:36px; border-radius:50%; background:var(--c, var(--accent)); color:#fff; display:grid;
     place-items:center; font-size:13px; flex:none; }
   /* Several tags: overlapping circles, like the avatar stack in the reference */
   .dots { display:flex; flex:none; }
@@ -88,7 +88,7 @@
   .pillbar button.on { background:var(--dark); color:#fff; }
   .float .actions { display:flex; gap:10px; margin-left:auto; }
   .tag { background:var(--card); border-radius:999px; padding:12px 18px; display:flex; align-items:center; gap:8px; }
-  .tag i { color:var(--orange); }
+  .tag i { color:var(--accent); }
   .tag.moving { background:var(--dark); color:#fff; }
   .float.bottom { left:18px; bottom:18px; }
   .zoom { position:absolute; z-index:5; right:18px; bottom:18px; display:flex; flex-direction:column; gap:8px; }
@@ -112,12 +112,12 @@
   .btn { display:inline-flex; align-items:center; gap:7px; border:0; border-radius:999px; padding:9px 14px; cursor:pointer;
     background:rgba(255,255,255,.12); color:#fff; font-size:14px; }
   .btn:hover { background:rgba(255,255,255,.2); }
-  .btn.orange { background:var(--orange); }
-  .btn.orange:hover { background:#ff9150; }
+  .btn.accent { background:var(--accent); }
+  .btn.accent:hover { background:var(--accent-hi); }
   .btn.danger { color:#ff9aa1; }
   .pop input[name=name] { width:100%; padding:10px 14px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
     border-radius:14px; color:#fff; outline:none; }
-  .pop input[name=name]:focus { border-color:var(--orange); }
+  .pop input[name=name]:focus { border-color:var(--accent); }
   .types { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
   .types label { cursor:pointer; }
   .types input { position:absolute; opacity:0; pointer-events:none; }
@@ -128,8 +128,8 @@
   .types input:checked + span i { color:#fff; }
   .types input:focus-visible + span { outline:2px solid #fff; outline-offset:2px; }
 
-  .pin { position:relative; width:34px; height:44px; cursor:pointer; }
-  .pin .fa-location-pin { position:absolute; inset:0; font-size:44px; color:var(--c, var(--orange)); filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+  .pin { width:34px; height:44px; cursor:pointer; }
+  .pin .fa-location-pin { position:absolute; inset:0; font-size:44px; color:var(--c, var(--accent)); filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
   .pin .glyph { position:absolute; left:50%; top:10px; transform:translateX(-50%); font-size:14px; color:#fff; }
   .pin .more { position:absolute; left:26px; top:-6px; display:flex; }
   .pin .more i { width:20px; height:20px; border-radius:50%; background:var(--c); color:#fff; font-size:10px;
@@ -276,7 +276,7 @@ new ResizeObserver(() => map.resize()).observe(document.getElementById('map'));
 
 // ---- Spot types ----
 const TYPES = {
-  meet:   { label: 'Car meet',     color: '#f7813a', icon: 'fa-car-side' },
+  meet:   { label: 'Car meet',     color: '#6b7d2a', icon: 'fa-car-side' },
   cruise: { label: 'Cruise route', color: '#3b82f6', icon: 'fa-route' },
   photo:  { label: 'Photo spot',   color: '#a855f7', icon: 'fa-camera' },
 };
@@ -340,7 +340,7 @@ function openForm(lngLat, existing) {
       <div class="types">${Object.entries(TYPES).map(([k, t]) => `<label style="--c:${t.color}">
         <input type="checkbox" name="tag" value="${k}" ${(existing?.tags || ['meet']).includes(k) ? 'checked' : ''}>
         <span><i class="fa-solid ${t.icon}"></i> ${t.label}</span></label>`).join('')}</div>
-      <div class="row"><button class="btn orange" type="submit"><i class="fa-solid fa-check"></i> Save</button><button class="btn" type="button" data-cancel>Cancel</button></div>
+      <div class="row"><button class="btn accent" type="submit"><i class="fa-solid fa-check"></i> Save</button><button class="btn" type="button" data-cancel>Cancel</button></div>
     </form>`, el => {
     const form = el.querySelector('form');
     setTimeout(() => form.name.focus(), 0);
