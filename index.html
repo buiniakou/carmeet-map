@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Car Meet Spots</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,42 +128,57 @@
   .types input:checked + span i { color:#fff; }
   .types input:focus-visible + span { outline:2px solid #fff; outline-offset:2px; }
 
-  .pin { width:34px; height:44px; cursor:pointer; }
-  .pin .fa-location-pin { position:absolute; inset:0; font-size:44px; color:var(--c, var(--accent)); filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
-  .pin .glyph { position:absolute; left:50%; top:10px; transform:translateX(-50%); font-size:14px; color:#fff; }
-  .pin .more { position:absolute; left:26px; top:-6px; display:flex; }
-  .pin .more i { width:20px; height:20px; border-radius:50%; background:var(--c); color:#fff; font-size:10px;
-    display:grid; place-items:center; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,.35); }
-  .pin .more i + i { margin-left:-6px; }
+  .pin { width:24px; height:32px; cursor:pointer; }
+  .pin .fa-location-pin { position:absolute; inset:0; font-size:32px; line-height:32px; text-align:center;
+    color:var(--c, var(--accent)); filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+  .pin .glyph { position:absolute; left:50%; top:7px; transform:translateX(-50%); font-size:10px; color:#fff; }
+  .pin .more { position:absolute; left:17px; top:-5px; display:flex; }
+  .pin .more i { width:15px; height:15px; border-radius:50%; background:var(--c); color:#fff; font-size:7px;
+    display:grid; place-items:center; border:1.5px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+  .pin .more i + i { margin-left:-5px; }
+  .grab { display:none; }
 
   @media (max-width: 1000px) {
     .side { width:320px; }
     .pillbar { display:none; }
   }
-  /* Phone: map on top, panel below as a sheet; still no page scroll */
+  /* Phone: full-screen map; the panel is a bottom sheet dragged between peek, half and full */
   @media (max-width: 700px) {
-    .app { flex-direction:column-reverse; }
-    .side { width:100%; height:42%; padding:14px 16px; gap:12px; border-radius:24px 24px 0 0; margin-top:-24px;
-      position:relative; z-index:6; box-shadow:0 -8px 24px rgba(0,0,0,.15); }
+    .app { display:block; position:relative; }
+    .map-card { position:absolute; inset:0; }
+    .side { position:fixed; left:0; right:0; bottom:0; z-index:6; width:100%; height:calc(100dvh - 56px);
+      padding:0 16px calc(12px + env(safe-area-inset-bottom)); gap:12px; border-radius:22px 22px 0 0;
+      box-shadow:0 -6px 24px rgba(0,0,0,.22); will-change:transform;
+      transform:translateY(calc(100% - 96px)); transition:transform .32s cubic-bezier(.2,.8,.2,1); }
+    .grab { display:flex; justify-content:center; align-items:center; height:22px; margin:0 -16px -4px; flex:none;
+      cursor:grab; touch-action:none; }
+    .grab span { width:40px; height:5px; border-radius:3px; background:#c9cbbd; }
+    .search, .stats { touch-action:none; }
     .logo, .hint { display:none; }
-    .search input { font-size:26px; }
-    .search { padding-bottom:8px; }
+    .search input { font-size:22px; }
+    .search { padding-bottom:10px; }
+    .search .circle { width:36px; height:36px; }
     .stats { gap:24px; }
-    .stat b { font-size:30px; }
+    .stat b { font-size:28px; }
     .stat small { font-size:12px; }
     .list-card { padding:0; background:transparent; }
     .list-card .card-head { display:none; }
-    #list { margin-top:0; }
-    .circle { width:44px; height:44px; }
-    .float.top { top:12px; left:12px; right:12px; }
-    .zoom { right:12px; bottom:36px; }
+    #list { margin-top:0; overscroll-behavior:contain; }
+    .circle { width:42px; height:42px; }
+    .float.top { top:max(12px, env(safe-area-inset-top)); left:12px; right:12px; }
+    .zoom { right:12px; bottom:calc(var(--sheet-h, 96px) + 12px); transition:bottom .32s cubic-bezier(.2,.8,.2,1); }
+    .zoom .circle { width:38px; height:38px; }
+    .zoom.covered { opacity:0; pointer-events:none; }
     .float.bottom { display:none; }
+    /* Moving a spot: show the instruction under the top buttons */
+    .float.bottom:has(.moving) { display:flex; top:calc(max(12px, env(safe-area-inset-top)) + 54px); bottom:auto; right:12px; }
   }
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="side">
+    <div class="grab" title="Drag to resize"><span></span></div>
     <div class="logo"><i class="fa-solid fa-car-side"></i> Car Meets</div>
     <label class="search">
       <input id="search" placeholder="Search spots...">
@@ -467,6 +482,7 @@ function renderList() {
     </div>`).join('')
     : `<div class="empty">${spots.length ? 'No spots match your search.' : 'No spots yet. Click the map to add one.'}</div>`;
   list.querySelectorAll('.item').forEach(el => el.onclick = () => {
+    setSheet('peek');
     const s = spots.find(x => x.id === el.dataset.id);
     popup.remove();
     map.flyTo({ center: toLngLat(s.x, s.y), zoom: Math.max(map.getZoom(), 4), duration: 800 });
@@ -497,6 +513,79 @@ document.getElementById('import').onchange = async e => {
 
 render();
 setInterval(renderList, 60000);
+
+// ---- Phone: drag the panel between peek (search bar), half and full ----
+const sheet = document.querySelector('.side');
+const phone = matchMedia('(max-width: 700px)');
+let sheetState = 'peek', drag = null;
+function snaps() {
+  const H = sheet.offsetHeight, s = sheet.querySelector('.search');
+  const peekH = s.offsetTop + s.offsetHeight + 10;
+  return { H, peekH, peek: H - peekH, half: Math.max(0, H - Math.round(innerHeight * 0.5)), full: 0 };
+}
+function placeSheet(y, animate) {
+  sheet.style.transition = animate ? '' : 'none';
+  sheet.style.transform = `translateY(${y}px)`;
+  document.documentElement.style.setProperty('--sheet-h', (sheet.offsetHeight - y) + 'px');
+  const zoom = document.querySelector('.zoom');
+  zoom.style.transition = animate ? '' : 'none';
+  zoom.classList.toggle('covered', sheet.offsetHeight - y > innerHeight * 0.6);
+}
+function setSheet(state, animate = true) {
+  if (!phone.matches) return;
+  sheetState = state;
+  placeSheet(snaps()[state], animate);
+}
+function layoutForScreen() {
+  if (phone.matches) {
+    setSheet(sheetState, false);
+    map.setPadding({ top: 60, bottom: snaps().peekH, left: 0, right: 0 });
+  } else {
+    sheet.style.transform = sheet.style.transition = '';
+    map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
+  }
+}
+sheet.addEventListener('pointerdown', e => {
+  if (!phone.matches || !e.target.closest('.grab, .search, .stats')) return;
+  drag = { id: e.pointerId, y0: e.clientY, start: snaps()[sheetState], y: snaps()[sheetState],
+    last: e.clientY, lt: e.timeStamp, v: 0, moved: false, onGrab: !!e.target.closest('.grab') };
+});
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dy = e.clientY - drag.y0;
+  if (!drag.moved) {
+    if (Math.abs(dy) < 6) return;
+    drag.moved = true;
+    if (document.activeElement === document.getElementById('search')) document.activeElement.blur();
+  }
+  drag.y = Math.max(0, Math.min(snaps().peek, drag.start + dy));
+  const dt = Math.max(1, e.timeStamp - drag.lt);
+  drag.v = 0.7 * ((e.clientY - drag.last) / dt) + 0.3 * drag.v;
+  drag.last = e.clientY; drag.lt = e.timeStamp;
+  placeSheet(drag.y, false);
+});
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (!d.moved) { if (d.onGrab) setSheet(sheetState === 'peek' ? 'half' : 'peek'); return; }
+  const sn = snaps(), order = ['full', 'half', 'peek'];
+  const nearest = ks => ks.reduce((a, b) => Math.abs(sn[a] - d.y) <= Math.abs(sn[b] - d.y) ? a : b);
+  let target = nearest(order);
+  if (Math.abs(d.v) > 0.4) {               // a flick goes to the next stop in that direction
+    const ahead = order.filter(k => d.v > 0 ? sn[k] > d.y + 4 : sn[k] < d.y - 4);
+    if (ahead.length) target = nearest(ahead);
+  }
+  setSheet(target);
+}
+addEventListener('pointerup', endDrag);
+addEventListener('pointercancel', endDrag);
+document.getElementById('search').addEventListener('focus', () => setSheet('full'));
+map.on('dragstart', () => { if (sheetState !== 'peek') setSheet('peek'); });
+map.on('click', () => { if (sheetState !== 'peek') setSheet('peek'); });
+phone.addEventListener('change', layoutForScreen);
+addEventListener('resize', () => { if (phone.matches) layoutForScreen(); });
+layoutForScreen();
+if (phone.matches) map.fitBounds(AREAS.all, { padding: 16, duration: 0 });
 </script>
 </body>
 </html>
