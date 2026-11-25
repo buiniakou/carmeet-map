@@ -316,16 +316,16 @@ const BUILT_IN = [
   {"id": "mwbulx0d", "name": "Fast & Furious Cafe", "tags": ["meet", "cruise"], "x": 2303.7564650387885, "y": 2722.808887830106, "createdAt": 1794385183837},
   {"id": "mwbue5ab", "name": "Underpass Gas Station", "tags": ["photo"], "x": 4295.139077636915, "y": 6205.718438212731, "createdAt": 1794384821315},
   {"id": "mwbucrx7", "name": "Mount Gordo Lake", "tags": ["photo"], "x": 5795.0321834811875, "y": 1567.4366388433737, "createdAt": 1794384757339},
-  {"id": "mwbuao1j", "name": "Richman Gas Staion", "tags": ["cruise", "photo"], "x": 2569.478961389528, "y": 4999.65326244324, "createdAt": 1794384658999},
+  {"id": "mwbuao1j", "name": "Richman Gas Station", "tags": ["cruise", "photo"], "x": 2569.478961389528, "y": 4999.65326244324, "createdAt": 1794384658999},
   {"id": "mwbu8pcj", "name": "Hills Picnic Area", "tags": ["photo"], "x": 3473.6661213340685, "y": 4483.812626346276, "createdAt": 1794384567379},
-  {"id": "mwbu65c0", "name": "Tongva Masion", "tags": ["photo"], "x": 2044.3137919163382, "y": 4255.491865022319, "createdAt": 1794384448128},
+  {"id": "mwbu65c0", "name": "Tongva Mansion", "tags": ["photo"], "x": 2044.3137919163382, "y": 4255.491865022319, "createdAt": 1794384448128},
   {"id": "mwbu4tmc", "name": "Hotel Roundabouts", "tags": ["photo"], "x": 3197.3281410273576, "y": 5815.747254570775, "createdAt": 1794384386293},
-  {"id": "mwbu32h8", "name": "Los Santon Overlook", "tags": ["cruise"], "x": 2650.9495166244706, "y": 5202.932909261821, "createdAt": 1794384304460},
-  {"id": "mwbtbmrt", "name": "Obervatory", "tags": ["cruise", "photo"], "x": 3419.5683938181437, "y": 4747.10598005923},
+  {"id": "mwbu32h8", "name": "Los Santos Overlook", "tags": ["cruise"], "x": 2650.9495166244706, "y": 5202.932909261821, "createdAt": 1794384304460},
+  {"id": "mwbtbmrt", "name": "Observatory", "tags": ["cruise", "photo"], "x": 3419.5683938181437, "y": 4747.10598005923},
   {"id": "mwbtf9x5", "name": "Winery", "tags": ["meet", "cruise", "photo"], "x": 2513.5, "y": 4157.493601357175},
   {"id": "mwbth39e", "name": "Reservoir", "tags": ["cruise", "photo"], "x": 3768.597347443623, "y": 5113.837046237777},
   {"id": "mwbtox65", "name": "Classic Pier Meet", "tags": ["meet"], "x": 2719, "y": 6197.236905848984},
-  {"id": "mwbtqpro", "name": "Playboy Masnion", "tags": ["meet"], "x": 2696.905263445492, "y": 5459.666803602416}
+  {"id": "mwbtqpro", "name": "Playboy Mansion", "tags": ["meet"], "x": 2696.905263445492, "y": 5459.666803602416}
 ];
 const REMOVED_KEY = 'carmeet-removed';
 function removedIds() { try { return new Set(JSON.parse(localStorage.getItem(REMOVED_KEY)) || []); } catch { return new Set(); } }
@@ -334,7 +334,10 @@ let spots = load();
 {
   const have = new Set(spots.map(s => s.id)), gone = removedIds();
   const extra = BUILT_IN.filter(s => !have.has(s.id) && !gone.has(s.id)).map(migrate).filter(Boolean);
-  if (extra.length) { spots = spots.concat(extra); save(); }
+  const TYPO_FIXES = {"Richman Gas Staion": "Richman Gas Station", "Tongva Masion": "Tongva Mansion", "Playboy Masnion": "Playboy Mansion", "Los Santon Overlook": "Los Santos Overlook", "Obervatory": "Observatory"};
+  let fixed = false;
+  spots.forEach(s => { if (TYPO_FIXES[s.name]) { s.name = TYPO_FIXES[s.name]; fixed = true; } });
+  if (extra.length || fixed) { spots = spots.concat(extra); save(); }
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(spots)); } catch {} }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
